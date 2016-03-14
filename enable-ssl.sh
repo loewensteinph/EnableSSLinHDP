@@ -75,7 +75,7 @@ function oozieSSLEnable() {
     #
 }
 #
-# Enable Ambari SSL encryption
+# Enable Ambari SSL encryption.  Execute on Ambari server after copying necessary files
 #
 function ambariSSLEnable() {
     rpm -q expect || yum install -y expect
@@ -118,7 +118,7 @@ EOF
 
     if ! grep -q 'api.ssl=true' /etc/ambari-server/conf/ambari.properties; then
         /usr/bin/expect ambari-ssl-expect.exp
-	/usr/bin/expect ambari-truststore-expect.exp
+	    /usr/bin/expect ambari-truststore-expect.exp
 
     	service ambari-server restart
     fi
@@ -126,7 +126,7 @@ EOF
     #validate wget -O-  --no-check-certificate "https://sandbox.hortonworks.com:8443/#/main/dashboard/metrics"
 }
 #
-# Enable Hadoop UIs SSL encryption.  Execute on each NameNode, ResourceManager, YARN History Server, and JournalNode after copying necessary files.  The keystore (.jks) should be the same on all hosts. Pre-requisite is that you enable Ambari SSL encryption
+# Enable Hadoop UIs SSL encryption.  Execute on each NameNode, ResourceManager, YARN History Server, and JournalNode after copying necessary files.  Pre-requisite is that you enable Ambari SSL encryption
 #
 function hadoopSSLEnable() {
     chmod 440 /etc/hadoop/conf/hadoop-private-keystore.jks
@@ -187,7 +187,7 @@ function hbaseSSLEnable() {
 }
 
 #
-# Enable Ranger Admin UI SSL Encryotion
+# Enable Ranger Admin UI SSL Encryotion, execute on Ranger server.
 #
 function rangerAdminSSLEnable() {
     openssl pkcs12  -export -in  ${RANGER_ADMIN_SERVER}.crt -inkey ${RANGER_ADMIN_SERVER}.key -out ranger-admin.p12 -name rangeradmin -CAfile NotApplicable -caname root -passout pass:password
@@ -207,7 +207,7 @@ EOF
 
 }
 #
-# Ranger HDFS Plugin
+# Ranger HDFS Plugin, execute on NameNodes
 #
 function rangerHDFSSSLEnable() {
     openssl pkcs12 -export -in rangerHdfsAgent.crt -inkey rangerHdfsAgent.key -out rangerHdfsAgent.p12 -name rangerHdfsAgent -CAfile NotApplicable -caname root -passout pass:password
@@ -230,12 +230,12 @@ EOF
 
 }
 #
-# Ranger HBase Plugin
+# Ranger HBase Plugin, execute on RegionServers
 #
 function rangerHBaseSSLEnable() {
     openssl pkcs12 -export -in rangerHbaseAgent.crt -inkey rangerHbaseAgent.key -out rangerHbaseAgent.p12 -name rangerHbaseAgent -CAfile NotApplicable -caname root -passout pass:password
 
-    RANGER_PLUGIN_PRIVATE_STORE=
+
     keytool -importkeystore -noprompt -deststorepass password -destkeypass password -destkeystore /etc/hadoop/conf/ranger-plugin-keystore.jks  -srckeystore rangerHbaseAgent.p12 -srcstoretype PKCS12 -srcstorepass password -alias rangerHbaseAgent
 
     keytool -import -noprompt -alias rangeradmintrust -file ${RANGER_ADMIN_SERVER}.crt -storepass password -keystore /etc/hadoop/conf/ranger-plugin-keystore.jks
@@ -307,5 +307,5 @@ while [ "$#" -ge 1 ]; do
             usage
         ;;
     esac
-    shift # past argument or value
+    shift
 done
