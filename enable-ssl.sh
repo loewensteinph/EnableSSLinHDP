@@ -121,6 +121,8 @@ EOF
 	    /usr/bin/expect ambari-truststore-expect.exp
 
     	service ambari-server restart
+
+    	while true; do if tail -100 /var/log/ambari-server/ambari-server.log | grep -q 'Started Services'; then break; else echo -n .; sleep 3; fi; done; echo
     fi
 
     #validate wget -O-  --no-check-certificate "https://sandbox.hortonworks.com:8443/#/main/dashboard/metrics"
@@ -234,7 +236,6 @@ EOF
 #
 function rangerHBaseSSLEnable() {
     openssl pkcs12 -export -in rangerHbaseAgent.crt -inkey rangerHbaseAgent.key -out rangerHbaseAgent.p12 -name rangerHbaseAgent -CAfile NotApplicable -caname root -passout pass:password
-
 
     keytool -importkeystore -noprompt -deststorepass password -destkeypass password -destkeystore /etc/hadoop/conf/ranger-plugin-keystore.jks  -srckeystore rangerHbaseAgent.p12 -srcstoretype PKCS12 -srcstorepass password -alias rangerHbaseAgent
 
